@@ -60,7 +60,7 @@ def login_page():
     
     st.markdown("<br>", unsafe_allow_html=True)
     if st.button("AUTHENTICATE SYSTEM"):
-        if username == "admin" and password == "securepass2026":
+        if username == "admin" and password == "Anshuman@0310":
             st.session_state.logged_in = True
             st.success("Access Granted.")
             st.rerun()
