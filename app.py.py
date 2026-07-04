@@ -24,7 +24,7 @@ def init_db():
 init_db()
 
 # Top Web Header Bar
-st.title("🚚 Fleet Logistics & Asset Tracking Hub")
+st.title(" Fleet Logistics & Asset Tracking Hub")
 st.markdown("---")
 
 # Web Sidebar Layout for Barcode Controls
@@ -55,7 +55,7 @@ if (pickup_clicked or delivery_clicked) and barcode_input:
 left_web_col, right_web_col = st.columns(2)
 
 with left_web_col:
-    st.subheader("📍 Live Fleet Positioning Map")
+    st.subheader(" Live Fleet Positioning Map")
     # Generate Web Map Object using Folium
     m = folium.Map(location=[truck_lat, truck_lon], zoom_start=13, control_scale=True)
     folium.Marker(
@@ -68,7 +68,7 @@ with left_web_col:
     st_folium(m, width="100%", height=450, returned_objects=[])
 
 with right_web_col:
-    st.subheader("📜 Live Database Audit Log")
+    st.subheader(" Live Database Audit Log")
     conn = sqlite3.connect('truck_web_logistics.db')
     df = pd.read_sql_query("SELECT barcode as 'Item ID', action as 'Status', timestamp as 'Logged Time' FROM asset_history ORDER BY id DESC", conn)
     conn.close()
