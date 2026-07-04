@@ -56,11 +56,11 @@ def login_page():
     st.markdown("<p style='text-align: center; color: #cbd5e1; margin-bottom: 30px;'>Enterprise Scan & Asset Management Portal</p>", unsafe_allow_html=True)
     
     username = st.text_input("Username", placeholder="Enter your operator username")
-    password = st.text_input("Password", type="password", placeholder="Pasword")
+    password = st.text_input("Password", type="password", placeholder="••••••••")
     
     st.markdown("<br>", unsafe_allow_html=True)
     if st.button("AUTHENTICATE SYSTEM"):
-        if username == "anshuman15@gmail.com" and password == "Anshuman@0310":
+        if username == "admin" and password == "securepass2026":
             st.session_state.logged_in = True
             st.success("Access Granted.")
             st.rerun()
