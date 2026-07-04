@@ -72,7 +72,7 @@ if not st.session_state.logged_in:
     login_page()
 else:
     # Top header columns to position the Log Out button directly in the corner
-    top_col1, top_col2 = st.columns([4, 1])
+    top_col1, top_col2 = st.columns()
     
     with top_col1:
         st.title("📊 Live Operations Dashboard")
@@ -194,7 +194,6 @@ else:
     st.markdown("---")
     st.header("📥 Complete Route Scan Logs")
 
-    # If list is empty, build a clean structural layout with empty rows
     if st.session_state.backup_db:
         df = pd.DataFrame(st.session_state.backup_db)
     else:
@@ -205,3 +204,6 @@ else:
     
     excel_buffer = io.BytesIO()
     with pd.ExcelWriter(excel_buffer, engine='openpyxl') as writer:
+        clean_df.to_excel(writer, index=False, sheet_name='Route_Logistics')
+    
+    st.download_button(
