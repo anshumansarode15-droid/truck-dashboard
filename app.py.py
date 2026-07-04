@@ -68,23 +68,41 @@ else:
 
     st.title("📊 Live Operations Dashboard")
 
-    # ----------------- 🚚 1. LIVE TRUCK TRACKING MAP -----------------
+    # ----------------- 🚚 1. LIVE TRUCK TRACKING MAP WITH SATELLITE -----------------
     st.header("📍 Live Fleet Tracker Map")
-    st.write("Real-time locations of active delivery trucks.")
+    st.write("Use the layer button in the top-right corner of the map to toggle **Satellite View**.")
 
     # Create an asynchronous fragment that reloads the map automatically every 10 seconds
     @st.fragment(run_every="10s")
     def show_live_map():
-        # Setup mock active truck coordinates (Change to your GPS API data feeds later)
+        # Setup mock active truck coordinates
         truck_locations = [
             {"name": "Truck A (TRK-01)", "lat": 19.0760, "lon": 72.8777, "status": "Moving"},
             {"name": "Truck B (TRK-02)", "lat": 18.5204, "lon": 73.8567, "status": "Idle"},
             {"name": "Truck C (TRK-03)", "lat": 28.7041, "lon": 77.1025, "status": "Transit"}
         ]
         
-        # Center the interactive map around the first truck point
-        base_map = folium.Map(location=[19.0760, 72.8777], zoom_start=6, control_scale=True)
+        # Initialize the base map with standard OpenStreetMap styling
+        base_map = folium.Map(location=[19.0760, 72.8777], zoom_start=6, control_scale=True, tiles="OpenStreetMap")
         
+        # Inject standard Google Satellite tile engine layer
+        folium.TileLayer(
+            tiles='https://google.com{x}&y={y}&z={z}',
+            attr='Google',
+            name='Google Satellite',
+            overlay=False,
+            control=True
+        ).add_to(base_map)
+        
+        # Inject an hybrid layer adding streets over the satellite images
+        folium.TileLayer(
+            tiles='https://google.com{x}&y={y}&z={z}',
+            attr='Google',
+            name='Satellite Hybrid',
+            overlay=False,
+            control=True
+        ).add_to(base_map)
+
         # Populate markers for each truck onto the map layer
         for truck in truck_locations:
             color = "green" if truck["status"] == "Moving" else "orange" if truck["status"] == "Transit" else "red"
@@ -95,8 +113,11 @@ else:
                 icon=folium.Icon(color=color, icon="truck", prefix="fa")
             ).add_to(base_map)
         
+        # Add a Layer Control panel so users can switch views seamlessly
+        folium.LayerControl().add_to(base_map)
+        
         # Render the map inside Streamlit UI safely
-        st_folium(base_map, width=700, height=400, key="fleet_live_map")
+        st_folium(base_map, width=700, height=450, key="fleet_live_map")
         st.caption("🔄 Map automatically streaming updates every 10 seconds.")
 
     show_live_map()
