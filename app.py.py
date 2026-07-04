@@ -66,10 +66,10 @@ def login_page():
     st.caption("<p style='text-align: center; color: #cbd5e1;'>Enterprise Scan & GPS Asset Management</p>", unsafe_allow_html=True)
     
     username = st.text_input("Username", placeholder="Enter your operator username")
-    password = st.text_input("Password", type="password", placeholder="••••••••")
+    password = st.text_input("Password", type="password", placeholder="Pasword")
     
     if st.button("AUTHENTICATE SYSTEM"):
-        if username == "admin" and password == "securepass2026":
+        if username == "anshuman@15" and password == "Anshuman@0310":
             st.session_state.logged_in = True
             st.success("Access Granted.")
             st.rerun()
