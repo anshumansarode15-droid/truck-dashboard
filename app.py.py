@@ -60,7 +60,7 @@ def login_page():
     
     st.markdown("<br>", unsafe_allow_html=True)
     if st.button("AUTHENTICATE SYSTEM"):
-        if username == "admin" and password == "Anshuman@0310":
+        if username == "admin" and password == "securepass2026":
             st.session_state.logged_in = True
             st.success("Access Granted.")
             st.rerun()
@@ -71,8 +71,8 @@ def login_page():
 if not st.session_state.logged_in:
     login_page()
 else:
-    # Top header columns to position the Log Out button directly in the corner
-    top_col1, top_col2 = st.columns()
+    # Explicit 4:1 width ratio inside columns fixes latest Streamlit engine requirements
+    top_col1, top_col2 = st.columns([4, 1])
     
     with top_col1:
         st.title("📊 Live Operations Dashboard")
@@ -206,4 +206,4 @@ else:
     with pd.ExcelWriter(excel_buffer, engine='openpyxl') as writer:
         clean_df.to_excel(writer, index=False, sheet_name='Route_Logistics')
     
-    top_col1, top_col2 = st.columns([4, 1])
+    st.download_button(
