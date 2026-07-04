@@ -1,6 +1,6 @@
 streamlit
 pandas
-openpyxl
+openpy
 folium
 streamlit-folium
 geopy
