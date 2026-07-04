@@ -69,7 +69,7 @@ def login_page():
     password = st.text_input("Password", type="password", placeholder="Pasword")
     
     if st.button("AUTHENTICATE SYSTEM"):
-        if username == "anshuman@15" and password == "Anshuman@0310":
+        if username == "anshuman15@gmail.com" and password == "Anshuman@0310":
             st.session_state.logged_in = True
             st.success("Access Granted.")
             st.rerun()
