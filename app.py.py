@@ -20,7 +20,7 @@ def init_supabase_client():
 
 supabase = init_supabase_client()
 
-# Start with a completely blank local tracking database
+# Start with an empty local list tracking database
 if "backup_db" not in st.session_state:
     st.session_state.backup_db = []
 
@@ -88,40 +88,31 @@ else:
     
     @st.fragment(run_every="10s")
     def show_live_map():
-        # Open an initial global overview map
         base_map = folium.Map(location=[20.5937, 78.9629], zoom_start=5, tiles="OpenStreetMap")
         folium.TileLayer('https://google.com{x}&y={y}&z={z}', attr='Google', name='Satellite Hybrid', overlay=False).add_to(base_map)
 
-        # Plot matching coordinates only if data exists in the session database
         if st.session_state.backup_db:
             df_map = pd.DataFrame(st.session_state.backup_db)
-            
             for _, row in df_map.iterrows():
-                # Plot Origin Pins
                 if pd.notna(row.get('p_lat')) and pd.notna(row.get('p_lon')):
                     folium.Marker(
                         location=[row['p_lat'], row['p_lon']],
                         popup=f"<b>Origin Pickup</b><br>{row['pickup_location']}",
-                        tooltip=f"Pickup: {row['truck_id']}",
                         icon=folium.Icon(color="blue", icon="play", prefix="fa")
                     ).add_to(base_map)
                     
-                    # Plot Destination Pins and draw the route connection lines
                     if pd.notna(row.get('d_lat')) and pd.notna(row.get('d_lon')):
                         folium.Marker(
                             location=[row['d_lat'], row['d_lon']],
                             popup=f"<b>Final Destination</b><br>{row['delivery_location']}",
-                            tooltip=f"Delivery: {row['truck_id']}",
                             icon=folium.Icon(color="green", icon="stop", prefix="fa")
                         ).add_to(base_map)
                         
-                        # Draw routing line
                         folium.PolyLine(
                             locations=[[row['p_lat'], row['p_lon']], [row['d_lat'], row['d_lon']]],
                             color="#ff4b5c",
                             weight=4,
-                            opacity=0.8,
-                            tooltip=f"Route: {row['truck_id']}"
+                            opacity=0.8
                         ).add_to(base_map)
 
         folium.LayerControl().add_to(base_map)
@@ -199,9 +190,18 @@ else:
             else:
                 st.warning("Please fill out both fields before saving.")
 
-    # ----------------- 📊 3. CLEAN PRESENTATION HISTORY REPO -----------------
+    # ----------------- 📊 3. FORCE VISIBLE HISTORY GRID -----------------
     st.markdown("---")
     st.header("📥 Complete Route Scan Logs")
 
+    # If list is empty, build a clean structural layout with empty rows
     if st.session_state.backup_db:
         df = pd.DataFrame(st.session_state.backup_db)
+    else:
+        df = pd.DataFrame(columns=['created_at', 'truck_id', 'barcode', 'status', 'pickup_location', 'delivery_location'])
+
+    clean_df = df[['created_at', 'truck_id', 'barcode', 'status', 'pickup_location', 'delivery_location']]
+    st.dataframe(clean_df, use_container_width=True)
+    
+    excel_buffer = io.BytesIO()
+    with pd.ExcelWriter(excel_buffer, engine='openpyxl') as writer:
