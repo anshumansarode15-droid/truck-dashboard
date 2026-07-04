@@ -4,6 +4,7 @@ import datetime
 import io
 import folium
 from streamlit_folium import st_folium
+from geopy.geocoders import Nominatim
 
 # ----------------- 🛠️ SYSTEM SECURITY & CONFIGURATION -----------------
 SUPABASE_URL = "https://supabase.co"
@@ -19,17 +20,30 @@ def init_supabase_client():
 
 supabase = init_supabase_client()
 
-# Initialize Local Backup Engine with sample route coordinates
+# High-fidelity built-in engine logic utilizing human-readable addresses
 if "backup_db" not in st.session_state:
     st.session_state.backup_db = [
-        {"created_at": "2026-07-04 10:00:00", "truck_id": "TRK-01", "barcode": "890107200123", "status": "Delivered", "pickup_location": "Mumbai Hub (19.07, 72.87)", "delivery_location": "Pune Depot (18.52, 73.85)"},
-        {"created_at": "2026-07-04 11:30:00", "truck_id": "TRK-02", "barcode": "750103123456", "status": "In Transit", "pickup_location": "Delhi Terminal (28.70, 77.10)", "delivery_location": "Pending Delivery"}
+        {"created_at": "2026-07-04 10:00:00", "truck_id": "TRK-01", "barcode": "890107200123", "status": "Delivered", "pickup_location": "Chhatrapati Shivaji Terminal, Mumbai, Maharashtra", "delivery_location": "Koregaon Park Road, Pune, Maharashtra", "p_lat": 19.0176, "p_lon": 72.8561, "d_lat": 18.5362, "d_lon": 73.8930},
+        {"created_at": "2026-07-04 11:30:00", "truck_id": "TRK-02", "barcode": "750103123456", "status": "In Transit", "pickup_location": "Connaught Place, New Delhi, Delhi", "delivery_location": "Pending Delivery", "p_lat": 28.6304, "p_lon": 77.2177, "d_lat": None, "d_lon": None}
     ]
 
 if "logged_in" not in st.session_state:
     st.session_state.logged_in = False
 
-# ----------------- 🎨 PREMIUM CUSTOMIZED LOGIN INTERFACE -----------------
+# Reverse Geocoding translation script (Lat/Lon -> Real Physical Address Name)
+def get_readable_address(lat, lon):
+    try:
+        geolocator = Nominatim(user_agent="fleet_command_dashboard")
+        location = geolocator.reverse((lat, lon), timeout=5)
+        if location and location.address:
+            # Shorten the long address output for clean display layout
+            parts = location.address.split(",")
+            return ", ".join(parts[:3]).strip()
+    except Exception:
+        pass
+    return f"Location Pin ({lat}, {lon})"
+
+# ----------------- 🎨 PREMIUM SECURITY INTERFACE -----------------
 def login_page():
     st.markdown("""
         <style>
@@ -46,11 +60,11 @@ def login_page():
     st.markdown("<p style='text-align: center; color: #cbd5e1; margin-bottom: 30px;'>Enterprise Scan & Asset Management Portal</p>", unsafe_allow_html=True)
     
     username = st.text_input("Username", placeholder="Enter your operator username")
-    password = st.text_input("Password", type="password", placeholder="Pasword")
+    password = st.text_input("Password", type="password", placeholder="••••••••")
     
     st.markdown("<br>", unsafe_allow_html=True)
     if st.button("AUTHENTICATE SYSTEM"):
-        if username == "anshuman15@gmail.com" and password == "Anshuman@0310":
+        if username == "admin" and password == "securepass2026":
             st.session_state.logged_in = True
             st.success("Access Granted.")
             st.rerun()
@@ -68,28 +82,47 @@ else:
 
     st.title("📊 Live Operations Dashboard")
 
-    # ----------------- 🚚 1. LIVE TRUCK TRACKING MAP -----------------
+    # ----------------- 🚚 1. MAP DRAWER ROUTING LAYER -----------------
     st.header("📍 Live Fleet Tracker Map")
     
     @st.fragment(run_every="10s")
     def show_live_map():
-        truck_locations = [
-            {"name": "Truck A (TRK-01)", "lat": 19.0760, "lon": 72.8777, "status": "Moving"},
-            {"name": "Truck B (TRK-02)", "lat": 18.5204, "lon": 73.8567, "status": "Idle"},
-            {"name": "Truck C (TRK-03)", "lat": 28.7041, "lon": 77.1025, "status": "Transit"}
-        ]
-        base_map = folium.Map(location=[19.0760, 72.8777], zoom_start=6, tiles="OpenStreetMap")
+        # Read available trips from system cache engine
+        df_map = pd.DataFrame(st.session_state.backup_db)
         
+        # Center map view context dynamically
+        base_map = folium.Map(location=[19.0760, 72.8777], zoom_start=6, tiles="OpenStreetMap")
         folium.TileLayer('https://google.com{x}&y={y}&z={z}', attr='Google', name='Satellite Hybrid', overlay=False).add_to(base_map)
 
-        for truck in truck_locations:
-            color = "green" if truck["status"] == "Moving" else "orange" if truck["status"] == "Transit" else "red"
-            folium.Marker(
-                location=[truck["lat"], truck["lon"]],
-                popup=f"<b>{truck['name']}</b><br>Status: {truck['status']}",
-                icon=folium.Icon(color=color, icon="truck", prefix="fa")
-            ).add_to(base_map)
-        
+        # Plot matching coordinates and generate transit line mappings
+        for _, row in df_map.iterrows():
+            # Add Origin Markers
+            if pd.notna(row.get('p_lat')) and pd.notna(row.get('p_lon')):
+                folium.Marker(
+                    location=[row['p_lat'], row['p_lon']],
+                    popup=f"<b>Origin Pickup</b><br>{row['pickup_location']}",
+                    tooltip=f"Pickup: {row['truck_id']}",
+                    icon=folium.Icon(color="blue", icon="play", prefix="fa")
+                ).add_to(base_map)
+                
+                # Add Destination Markers and draw connecting transit vectors
+                if pd.notna(row.get('d_lat')) and pd.notna(row.get('d_lon')):
+                    folium.Marker(
+                        location=[row['d_lat'], row['d_lon']],
+                        popup=f"<b>Final Destination</b><br>{row['delivery_location']}",
+                        tooltip=f"Delivery: {row['truck_id']}",
+                        icon=folium.Icon(color="green", icon="stop", prefix="fa")
+                    ).add_to(base_map)
+                    
+                    # Draw a bright solid vector connecting pickup point directly to delivery terminal
+                    folium.PolyLine(
+                        locations=[[row['p_lat'], row['p_lon']], [row['d_lat'], row['d_lon']]],
+                        color="#ff4b5c",
+                        weight=4,
+                        opacity=0.8,
+                        tooltip=f"Active Route: {row['truck_id']}"
+                    ).add_to(base_map)
+
         folium.LayerControl().add_to(base_map)
         st_folium(base_map, width=700, height=400, key="fleet_live_map")
 
@@ -99,8 +132,7 @@ else:
     st.markdown("---")
     st.header("📦 Live Scan Route Portal")
     
-    # Simple choice to simulate real GPS tracking locations
-    st.write("📍 **Simulate Current Coordinates for testing:**")
+    st.write("📍 **Simulate Location coordinates for test conversion:**")
     col1, col2 = st.columns(2)
     with col1:
         sim_lat = st.number_input("Current Lat", value=19.0760, format="%.4f")
@@ -110,85 +142,52 @@ else:
     with st.form("barcode_scan_form", clear_on_submit=True):
         input_truck_id = st.text_input("Truck ID / Vehicle Name", placeholder="e.g., TRK-01")
         input_barcode = st.text_input("Barcode Data", placeholder="Click here and scan item barcode")
-        
-        # Status now matches logical transit states
-        input_status = st.selectbox("Update Trip Status", ["Picked Up (At Origin)", "Delivered (At Destination)", "In Transit"])
+        input_status = st.selectbox("Update Trip Status", ["Picked Up (At Origin)", "Delivered (At Destination)"])
         
         submit_button = st.form_submit_button("💾 SAVE ROUTE SCAN TO DATABASE")
         
         if submit_button:
             if input_truck_id and input_barcode:
                 current_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-                geo_string = f"Lat: {sim_lat}, Lon: {sim_lon}"
                 
-                # Logic to determine routing data based on action status selected
-                p_loc = geo_string if "Picked Up" in input_status else "Logged from Hub"
-                d_loc = geo_string if "Delivered" in input_status else "Pending Delivery"
+                # Instantly transform coordinates into an official real-world street location text
+                with st.spinner("Converting coordinates into physical address..."):
+                    resolved_address = get_readable_address(sim_lat, sim_lon)
                 
-                new_record = {
-                    "truck_id": input_truck_id, 
-                    "barcode": input_barcode, 
-                    "status": input_status,
-                    "pickup_location": p_loc,
-                    "delivery_location": d_loc
-                }
+                # Check cache for existing delivery history configurations
+                existing_match = None
+                for idx, entry in enumerate(st.session_state.backup_db):
+                    if entry["truck_id"] == input_truck_id and entry["barcode"] == input_barcode:
+                        existing_match = idx
+                        break
+
+                if "Picked Up" in input_status:
+                    new_record = {
+                        "truck_id": input_truck_id, "barcode": input_barcode, "status": "In Transit",
+                        "pickup_location": resolved_address, "delivery_location": "Pending Delivery",
+                        "p_lat": sim_lat, "p_lon": sim_lon, "d_lat": None, "d_lon": None
+                    }
+                    st.session_state.backup_db.insert(0, new_record)
+                else:
+                    # Update active trip logic vectors
+                    if existing_match is not None:
+                        st.session_state.backup_db[existing_match]["status"] = "Delivered"
+                        st.session_state.backup_db[existing_match]["delivery_location"] = resolved_address
+                        st.session_state.backup_db[existing_match]["d_lat"] = sim_lat
+                        st.session_state.backup_db[existing_match]["d_lon"] = sim_lon
+                    else:
+                        new_record = {
+                            "truck_id": input_truck_id, "barcode": input_barcode, "status": "Delivered",
+                            "pickup_location": "Unknown Origin", "delivery_location": resolved_address,
+                            "p_lat": None, "p_lon": None, "d_lat": sim_lat, "d_lon": sim_lon
+                        }
+                        st.session_state.backup_db.insert(0, new_record)
                 
-                saved_to_cloud = False
+                # Try saving structural array layout schemas directly to cloud table arrays
                 if supabase is not None:
                     try:
-                        supabase.table("scan_history").insert(new_record).execute()
-                        saved_to_cloud = True
-                    except Exception:
-                        pass
-                
-                backup_record = {
-                    "created_at": current_time, 
-                    "truck_id": input_truck_id, 
-                    "barcode": input_barcode, 
-                    "status": input_status,
-                    "pickup_location": p_loc,
-                    "delivery_location": d_loc
-                }
-                st.session_state.backup_db.insert(0, backup_record)
-                
-                if saved_to_cloud:
-                    st.success(f"🎉 Barcode recorded! Route tracking saved to cloud database.")
-                else:
-                    st.info(f"💾 Saved to local database backup engine.")
-                st.rerun()
-            else:
-                st.warning("Please fill out both fields.")
-
-    # ----------------- 📊 3. EXCEL HISTORY REPO WITH LOCATION DATA -----------------
-    st.markdown("---")
-    st.header("📥 Complete Route Scan Logs")
-
-    records_loaded = False
-    if supabase is not None:
-        try:
-            db_response = supabase.table("scan_history").select("*").order("created_at", descending=True).execute()
-            records = db_response.data
-            if records:
-                df = pd.DataFrame(records)
-                # Keep the new route tracking variables visible
-                df = df[['created_at', 'truck_id', 'barcode', 'status', 'pickup_location', 'delivery_location']]
-                records_loaded = True
-        except Exception:
-            pass
-
-    if not records_loaded:
-        df = pd.DataFrame(st.session_state.backup_db)
-        st.caption("⚡ Operating on Database Backup Engine")
-
-    st.dataframe(df, use_container_width=True)
-    
-    excel_buffer = io.BytesIO()
-    with pd.ExcelWriter(excel_buffer, engine='openpyxl') as writer:
-        df.to_excel(writer, index=False, sheet_name='Route_Logistics')
-    
-    st.download_button(
-        label="📥 Download Full Route Excel Sheet",
-        data=excel_buffer.getvalue(),
-        file_name=f"fleet_route_report_{datetime.date.today()}.xlsx",
-        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-    )
+                        cloud_record = {
+                            "truck_id": input_truck_id, "barcode": input_barcode, "status": input_status,
+                            "pickup_location": resolved_address if "Picked Up" in input_status else "Updated",
+                            "delivery_location": resolved_address if "Delivered" in input_status else "Pending Delivery"
+                        }
