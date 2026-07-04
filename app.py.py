@@ -206,4 +206,4 @@ else:
     with pd.ExcelWriter(excel_buffer, engine='openpyxl') as writer:
         clean_df.to_excel(writer, index=False, sheet_name='Route_Logistics')
     
-    st.download_button
+    top_col1, top_col2 = st.columns([4, 1])
