@@ -6,9 +6,9 @@ import requests
 from supabase import create_client, Client
 
 # ----------------- 🛠️ SYSTEM SECURITY & CONFIGURATION -----------------
-# Your actual database credentials are hardcoded here safely
-SUPABASE_URL = "https://supabase.co"
-SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImN1anhnZ3dsaWZrdGZhbXBwcWRpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODMxNTIzNDcsImV4cCI6MjA5ODcyODM0N30.EGIVz3gpVRIpHUDWCj0xLNvlIPL9Wu9cTeSbJdZVa4E"
+# Dynamically fetch credentials from the secure Streamlit Secrets panel
+SUPABASE_URL = st.secrets["SUPABASE_URL"]
+SUPABASE_KEY = st.secrets["SUPABASE_KEY"]
 
 # Initialize Supabase Database Client Connection
 @st.cache_resource
