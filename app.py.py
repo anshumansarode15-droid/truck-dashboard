@@ -7,8 +7,8 @@ from supabase import create_client, Client
 
 # ----------------- 🛠️ SYSTEM SECURITY & CONFIGURATION -----------------
 # Your actual database credentials are hardcoded here safely
-SUPABASE_URL = "https://appcom-xtissesisrjqesa5xl6bgf.streamlit.app/"
-SUPABASE_KEY = "ANSHUMAN@0310"
+SUPABASE_URL = "https://cujxggwlifktfamppqdi.supabase.co"
+SUPABASE_KEY = "sb_secret_BwNhgBiWH42i9unHb1_Cyw_39bqW4aZ"
 
 # Initialize Supabase Database Client Connection
 @st.cache_resource
