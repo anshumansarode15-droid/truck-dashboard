@@ -20,12 +20,9 @@ def init_supabase_client():
 
 supabase = init_supabase_client()
 
-# High-fidelity built-in engine logic utilizing human-readable addresses
+# Start with a completely blank local tracking database
 if "backup_db" not in st.session_state:
-    st.session_state.backup_db = [
-        {"created_at": "2026-07-04 10:00:00", "truck_id": "TRK-01", "barcode": "890107200123", "status": "Delivered", "pickup_location": "Chhatrapati Shivaji Terminal, Mumbai, Maharashtra", "delivery_location": "Koregaon Park Road, Pune, Maharashtra", "p_lat": 19.0176, "p_lon": 72.8561, "d_lat": 18.5362, "d_lon": 73.8930},
-        {"created_at": "2026-07-04 11:30:00", "truck_id": "TRK-02", "barcode": "750103123456", "status": "In Transit", "pickup_location": "Connaught Place, New Delhi, Delhi", "delivery_location": "Pending Delivery", "p_lat": 28.6304, "p_lon": 77.2177, "d_lat": None, "d_lon": None}
-    ]
+    st.session_state.backup_db = []
 
 if "logged_in" not in st.session_state:
     st.session_state.logged_in = False
@@ -36,7 +33,6 @@ def get_readable_address(lat, lon):
         geolocator = Nominatim(user_agent="fleet_command_dashboard")
         location = geolocator.reverse((lat, lon), timeout=5)
         if location and location.address:
-            # Shorten the long address output for clean display layout
             parts = location.address.split(",")
             return ", ".join(parts[:3]).strip()
     except Exception:
@@ -60,11 +56,11 @@ def login_page():
     st.markdown("<p style='text-align: center; color: #cbd5e1; margin-bottom: 30px;'>Enterprise Scan & Asset Management Portal</p>", unsafe_allow_html=True)
     
     username = st.text_input("Username", placeholder="Enter your operator username")
-    password = st.text_input("Password", type="password", placeholder="••••••••")
+    password = st.text_input("Password", type="password", placeholder="Pasword")
     
     st.markdown("<br>", unsafe_allow_html=True)
     if st.button("AUTHENTICATE SYSTEM"):
-        if username == "admin" and password == "securepass2026":
+        if username == "anshuman15@gmail.com" and password == "Anshuman@0310":
             st.session_state.logged_in = True
             st.success("Access Granted.")
             st.rerun()
@@ -75,64 +71,69 @@ def login_page():
 if not st.session_state.logged_in:
     login_page()
 else:
-    st.sidebar.title("🛡️ System Control")
-    if st.sidebar.button("Log Out of System"):
-        st.session_state.logged_in = False
-        st.rerun()
-
-    st.title("📊 Live Operations Dashboard")
+    # Top header columns to position the Log Out button directly in the corner
+    top_col1, top_col2 = st.columns([4, 1])
+    
+    with top_col1:
+        st.title("📊 Live Operations Dashboard")
+        
+    with top_col2:
+        st.write("<style>div.stButton > button {width: 100%; margin-top: 15px;}</style>", unsafe_allow_html=True)
+        if st.button("🚪 Log Out", help="Exit the system secure session"):
+            st.session_state.logged_in = False
+            st.rerun()
 
     # ----------------- 🚚 1. MAP DRAWER ROUTING LAYER -----------------
     st.header("📍 Live Fleet Tracker Map")
     
     @st.fragment(run_every="10s")
     def show_live_map():
-        # Read available trips from system cache engine
-        df_map = pd.DataFrame(st.session_state.backup_db)
-        
-        # Center map view context dynamically
-        base_map = folium.Map(location=[19.0760, 72.8777], zoom_start=6, tiles="OpenStreetMap")
+        # Open an initial global overview map
+        base_map = folium.Map(location=[20.5937, 78.9629], zoom_start=5, tiles="OpenStreetMap")
         folium.TileLayer('https://google.com{x}&y={y}&z={z}', attr='Google', name='Satellite Hybrid', overlay=False).add_to(base_map)
 
-        # Plot matching coordinates and generate transit line mappings
-        for _, row in df_map.iterrows():
-            # Add Origin Markers
-            if pd.notna(row.get('p_lat')) and pd.notna(row.get('p_lon')):
-                folium.Marker(
-                    location=[row['p_lat'], row['p_lon']],
-                    popup=f"<b>Origin Pickup</b><br>{row['pickup_location']}",
-                    tooltip=f"Pickup: {row['truck_id']}",
-                    icon=folium.Icon(color="blue", icon="play", prefix="fa")
-                ).add_to(base_map)
-                
-                # Add Destination Markers and draw connecting transit vectors
-                if pd.notna(row.get('d_lat')) and pd.notna(row.get('d_lon')):
+        # Plot matching coordinates only if data exists in the session database
+        if st.session_state.backup_db:
+            df_map = pd.DataFrame(st.session_state.backup_db)
+            
+            for _, row in df_map.iterrows():
+                # Plot Origin Pins
+                if pd.notna(row.get('p_lat')) and pd.notna(row.get('p_lon')):
                     folium.Marker(
-                        location=[row['d_lat'], row['d_lon']],
-                        popup=f"<b>Final Destination</b><br>{row['delivery_location']}",
-                        tooltip=f"Delivery: {row['truck_id']}",
-                        icon=folium.Icon(color="green", icon="stop", prefix="fa")
+                        location=[row['p_lat'], row['p_lon']],
+                        popup=f"<b>Origin Pickup</b><br>{row['pickup_location']}",
+                        tooltip=f"Pickup: {row['truck_id']}",
+                        icon=folium.Icon(color="blue", icon="play", prefix="fa")
                     ).add_to(base_map)
                     
-                    # Draw a bright solid vector connecting pickup point directly to delivery terminal
-                    folium.PolyLine(
-                        locations=[[row['p_lat'], row['p_lon']], [row['d_lat'], row['d_lon']]],
-                        color="#ff4b5c",
-                        weight=4,
-                        opacity=0.8,
-                        tooltip=f"Active Route: {row['truck_id']}"
-                    ).add_to(base_map)
+                    # Plot Destination Pins and draw the route connection lines
+                    if pd.notna(row.get('d_lat')) and pd.notna(row.get('d_lon')):
+                        folium.Marker(
+                            location=[row['d_lat'], row['d_lon']],
+                            popup=f"<b>Final Destination</b><br>{row['delivery_location']}",
+                            tooltip=f"Delivery: {row['truck_id']}",
+                            icon=folium.Icon(color="green", icon="stop", prefix="fa")
+                        ).add_to(base_map)
+                        
+                        # Draw routing line
+                        folium.PolyLine(
+                            locations=[[row['p_lat'], row['p_lon']], [row['d_lat'], row['d_lon']]],
+                            color="#ff4b5c",
+                            weight=4,
+                            opacity=0.8,
+                            tooltip=f"Route: {row['truck_id']}"
+                        ).add_to(base_map)
 
         folium.LayerControl().add_to(base_map)
         st_folium(base_map, width=700, height=400, key="fleet_live_map")
 
     show_live_map()
 
-    # ----------------- 📦 2. UPGRADED ROUTE SCANNER PORTAL -----------------
+    # ----------------- 📦 2. LIVE ROUTE SCANNER PORTAL -----------------
     st.markdown("---")
     st.header("📦 Live Scan Route Portal")
     
-    st.write("📍 **Simulate Location coordinates for test conversion:**")
+    st.write("📍 **Capture Current Live Coordinates:**")
     col1, col2 = st.columns(2)
     with col1:
         sim_lat = st.number_input("Current Lat", value=19.0760, format="%.4f")
@@ -140,8 +141,8 @@ else:
         sim_lon = st.number_input("Current Lon", value=72.8777, format="%.4f")
 
     with st.form("barcode_scan_form", clear_on_submit=True):
-        input_truck_id = st.text_input("Truck ID / Vehicle Name", placeholder="e.g., TRK-01")
-        input_barcode = st.text_input("Barcode Data", placeholder="Click here and scan item barcode")
+        input_truck_id = st.text_input("Truck ID / Vehicle Name", placeholder="Enter your actual Truck plate/ID")
+        input_barcode = st.text_input("Barcode Data", placeholder="Click here and scan active item barcode")
         input_status = st.selectbox("Update Trip Status", ["Picked Up (At Origin)", "Delivered (At Destination)"])
         
         submit_button = st.form_submit_button("💾 SAVE ROUTE SCAN TO DATABASE")
@@ -150,11 +151,9 @@ else:
             if input_truck_id and input_barcode:
                 current_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
                 
-                # Instantly transform coordinates into an official real-world street location text
-                with st.spinner("Converting coordinates into physical address..."):
+                with st.spinner("Resolving coordinate data into exact physical address..."):
                     resolved_address = get_readable_address(sim_lat, sim_lon)
                 
-                # Check cache for existing delivery history configurations
                 existing_match = None
                 for idx, entry in enumerate(st.session_state.backup_db):
                     if entry["truck_id"] == input_truck_id and entry["barcode"] == input_barcode:
@@ -163,13 +162,13 @@ else:
 
                 if "Picked Up" in input_status:
                     new_record = {
+                        "created_at": current_time,
                         "truck_id": input_truck_id, "barcode": input_barcode, "status": "In Transit",
                         "pickup_location": resolved_address, "delivery_location": "Pending Delivery",
                         "p_lat": sim_lat, "p_lon": sim_lon, "d_lat": None, "d_lon": None
                     }
                     st.session_state.backup_db.insert(0, new_record)
                 else:
-                    # Update active trip logic vectors
                     if existing_match is not None:
                         st.session_state.backup_db[existing_match]["status"] = "Delivered"
                         st.session_state.backup_db[existing_match]["delivery_location"] = resolved_address
@@ -177,16 +176,32 @@ else:
                         st.session_state.backup_db[existing_match]["d_lon"] = sim_lon
                     else:
                         new_record = {
+                            "created_at": current_time,
                             "truck_id": input_truck_id, "barcode": input_barcode, "status": "Delivered",
-                            "pickup_location": "Unknown Origin", "delivery_location": resolved_address,
+                            "pickup_location": "Direct Delivery (No Pickup Logged)", "delivery_location": resolved_address,
                             "p_lat": None, "p_lon": None, "d_lat": sim_lat, "d_lon": sim_lon
                         }
                         st.session_state.backup_db.insert(0, new_record)
                 
-                # Try saving structural array layout schemas directly to cloud table arrays
                 if supabase is not None:
                     try:
                         cloud_record = {
                             "truck_id": input_truck_id, "barcode": input_barcode, "status": input_status,
                             "pickup_location": resolved_address if "Picked Up" in input_status else "Updated",
-                            "delivery_location": resolved_address if "Delivered" in input_status else "Pending Delivery"}
+                            "delivery_location": resolved_address if "Delivered" in input_status else "Pending Delivery"
+                        }
+                        supabase.table("scan_history").insert(cloud_record).execute()
+                    except Exception:
+                        pass
+                
+                st.success("🎉 Route logistics data logged and address fields updated successfully!")
+                st.rerun()
+            else:
+                st.warning("Please fill out both fields before saving.")
+
+    # ----------------- 📊 3. CLEAN PRESENTATION HISTORY REPO -----------------
+    st.markdown("---")
+    st.header("📥 Complete Route Scan Logs")
+
+    if st.session_state.backup_db:
+        df = pd.DataFrame(st.session_state.backup_db)
