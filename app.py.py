@@ -19,9 +19,12 @@ def init_supabase_client():
 
 supabase = init_supabase_client()
 
-# Initialize Local Backup Engine
+# Initialize Local Backup Engine with sample route coordinates
 if "backup_db" not in st.session_state:
-    st.session_state.backup_db = 
+    st.session_state.backup_db = [
+        {"created_at": "2026-07-04 10:00:00", "truck_id": "TRK-01", "barcode": "890107200123", "status": "Delivered", "pickup_location": "Mumbai Hub (19.07, 72.87)", "delivery_location": "Pune Depot (18.52, 73.85)"},
+        {"created_at": "2026-07-04 11:30:00", "truck_id": "TRK-02", "barcode": "750103123456", "status": "In Transit", "pickup_location": "Delhi Terminal (28.70, 77.10)", "delivery_location": "Pending Delivery"}
+    ]
 
 if "logged_in" not in st.session_state:
     st.session_state.logged_in = False
@@ -43,11 +46,11 @@ def login_page():
     st.markdown("<p style='text-align: center; color: #cbd5e1; margin-bottom: 30px;'>Enterprise Scan & Asset Management Portal</p>", unsafe_allow_html=True)
     
     username = st.text_input("Username", placeholder="Enter your operator username")
-    password = st.text_input("Password", type="password", placeholder="Paswoard")
+    password = st.text_input("Password", type="password", placeholder="••••••••")
     
     st.markdown("<br>", unsafe_allow_html=True)
     if st.button("AUTHENTICATE SYSTEM"):
-        if username == "anshuman15@gmail.com" and password == "Anshuman@0310":
+        if username == "admin" and password == "securepass2026":
             st.session_state.logged_in = True
             st.success("Access Granted.")
             st.rerun()
@@ -65,77 +68,70 @@ else:
 
     st.title("📊 Live Operations Dashboard")
 
-    # ----------------- 🚚 1. LIVE TRUCK TRACKING MAP WITH SATELLITE -----------------
+    # ----------------- 🚚 1. LIVE TRUCK TRACKING MAP -----------------
     st.header("📍 Live Fleet Tracker Map")
-    st.write("Use the layer button in the top-right corner of the map to toggle **Satellite View**.")
-
-    # Create an asynchronous fragment that reloads the map automatically every 10 seconds
+    
     @st.fragment(run_every="10s")
     def show_live_map():
-        # Setup mock active truck coordinates
         truck_locations = [
             {"name": "Truck A (TRK-01)", "lat": 19.0760, "lon": 72.8777, "status": "Moving"},
             {"name": "Truck B (TRK-02)", "lat": 18.5204, "lon": 73.8567, "status": "Idle"},
             {"name": "Truck C (TRK-03)", "lat": 28.7041, "lon": 77.1025, "status": "Transit"}
         ]
+        base_map = folium.Map(location=[19.0760, 72.8777], zoom_start=6, tiles="OpenStreetMap")
         
-        # Initialize the base map with standard OpenStreetMap styling
-        base_map = folium.Map(location=[19.0760, 72.8777], zoom_start=6, control_scale=True, tiles="OpenStreetMap")
-        
-        # Inject standard Google Satellite tile engine layer
-        folium.TileLayer(
-            tiles='https://google.com{x}&y={y}&z={z}',
-            attr='Google',
-            name='Google Satellite',
-            overlay=False,
-            control=True
-        ).add_to(base_map)
-        
-        # Inject an hybrid layer adding streets over the satellite images
-        folium.TileLayer(
-            tiles='https://google.com{x}&y={y}&z={z}',
-            attr='Google',
-            name='Satellite Hybrid',
-            overlay=False,
-            control=True
-        ).add_to(base_map)
+        folium.TileLayer('https://google.com{x}&y={y}&z={z}', attr='Google', name='Satellite Hybrid', overlay=False).add_to(base_map)
 
-        # Populate markers for each truck onto the map layer
         for truck in truck_locations:
             color = "green" if truck["status"] == "Moving" else "orange" if truck["status"] == "Transit" else "red"
             folium.Marker(
                 location=[truck["lat"], truck["lon"]],
                 popup=f"<b>{truck['name']}</b><br>Status: {truck['status']}",
-                tooltip=truck["name"],
                 icon=folium.Icon(color=color, icon="truck", prefix="fa")
             ).add_to(base_map)
         
-        # Add a Layer Control panel so users can switch views seamlessly
         folium.LayerControl().add_to(base_map)
-        
-        # Render the map inside Streamlit UI safely
-        st_folium(base_map, width=700, height=450, key="fleet_live_map")
-        st.caption("🔄 Map automatically streaming updates every 10 seconds.")
+        st_folium(base_map, width=700, height=400, key="fleet_live_map")
 
     show_live_map()
 
-    # ----------------- 📦 2. NEW BARCODE SCANNER PORTAL -----------------
+    # ----------------- 📦 2. UPGRADED ROUTE SCANNER PORTAL -----------------
     st.markdown("---")
-    st.header("📦 New Scan Entry Portal")
+    st.header("📦 Live Scan Route Portal")
     
+    # Simple choice to simulate real GPS tracking locations
+    st.write("📍 **Simulate Current Coordinates for testing:**")
+    col1, col2 = st.columns(2)
+    with col1:
+        sim_lat = st.number_input("Current Lat", value=19.0760, format="%.4f")
+    with col2:
+        sim_lon = st.number_input("Current Lon", value=72.8777, format="%.4f")
+
     with st.form("barcode_scan_form", clear_on_submit=True):
-        st.write("Scan or type a barcode to record it into the active log.")
-        
-        input_truck_id = st.text_input("Truck ID / Vehicle Name", placeholder="e.g., TRK-05")
+        input_truck_id = st.text_input("Truck ID / Vehicle Name", placeholder="e.g., TRK-01")
         input_barcode = st.text_input("Barcode Data", placeholder="Click here and scan item barcode")
-        input_status = st.selectbox("Scan Status", ["Success", "Damaged", "Wrong Destination"])
         
-        submit_button = st.form_submit_button("💾 SAVE SCAN RECORD")
+        # Status now matches logical transit states
+        input_status = st.selectbox("Update Trip Status", ["Picked Up (At Origin)", "Delivered (At Destination)", "In Transit"])
+        
+        submit_button = st.form_submit_button("💾 SAVE ROUTE SCAN TO DATABASE")
         
         if submit_button:
             if input_truck_id and input_barcode:
                 current_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-                new_record = {"truck_id": input_truck_id, "barcode": input_barcode, "status": input_status}
+                geo_string = f"Lat: {sim_lat}, Lon: {sim_lon}"
+                
+                # Logic to determine routing data based on action status selected
+                p_loc = geo_string if "Picked Up" in input_status else "Logged from Hub"
+                d_loc = geo_string if "Delivered" in input_status else "Pending Delivery"
+                
+                new_record = {
+                    "truck_id": input_truck_id, 
+                    "barcode": input_barcode, 
+                    "status": input_status,
+                    "pickup_location": p_loc,
+                    "delivery_location": d_loc
+                }
                 
                 saved_to_cloud = False
                 if supabase is not None:
@@ -145,20 +141,27 @@ else:
                     except Exception:
                         pass
                 
-                backup_record = {"created_at": current_time, "truck_id": input_truck_id, "barcode": input_barcode, "status": input_status}
+                backup_record = {
+                    "created_at": current_time, 
+                    "truck_id": input_truck_id, 
+                    "barcode": input_barcode, 
+                    "status": input_status,
+                    "pickup_location": p_loc,
+                    "delivery_location": d_loc
+                }
                 st.session_state.backup_db.insert(0, backup_record)
                 
                 if saved_to_cloud:
-                    st.success(f"🎉 Barcode {input_barcode} successfully logged to Cloud Storage!")
+                    st.success(f"🎉 Barcode recorded! Route tracking saved to cloud database.")
                 else:
-                    st.info(f"💾 Barcode {input_barcode} saved securely to Local System Backup Engine.")
+                    st.info(f"💾 Saved to local database backup engine.")
                 st.rerun()
             else:
-                st.warning("Please fill out both the Truck ID and Barcode fields.")
+                st.warning("Please fill out both fields.")
 
-    # ----------------- 📊 3. REAL DATABASE SCAN HISTORY & EXCEL EXPORT -----------------
+    # ----------------- 📊 3. EXCEL HISTORY REPO WITH LOCATION DATA -----------------
     st.markdown("---")
-    st.header("📥 Operational Scanning History")
+    st.header("📥 Complete Route Scan Logs")
 
     records_loaded = False
     if supabase is not None:
@@ -167,24 +170,25 @@ else:
             records = db_response.data
             if records:
                 df = pd.DataFrame(records)
-                df = df[['created_at', 'truck_id', 'barcode', 'status']]
+                # Keep the new route tracking variables visible
+                df = df[['created_at', 'truck_id', 'barcode', 'status', 'pickup_location', 'delivery_location']]
                 records_loaded = True
         except Exception:
             pass
 
     if not records_loaded:
         df = pd.DataFrame(st.session_state.backup_db)
-        st.caption("⚡ System Operating on Local Encrypted Database Backup Engine")
+        st.caption("⚡ Operating on Database Backup Engine")
 
     st.dataframe(df, use_container_width=True)
     
     excel_buffer = io.BytesIO()
     with pd.ExcelWriter(excel_buffer, engine='openpyxl') as writer:
-        df.to_excel(writer, index=False, sheet_name='Operations_Log')
+        df.to_excel(writer, index=False, sheet_name='Route_Logistics')
     
     st.download_button(
-        label="📥 Export Live Database Logs to Excel",
+        label="📥 Download Full Route Excel Sheet",
         data=excel_buffer.getvalue(),
-        file_name=f"scan_history_{datetime.date.today()}.xlsx",
+        file_name=f"fleet_route_report_{datetime.date.today()}.xlsx",
         mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
     )
