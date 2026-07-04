@@ -189,5 +189,4 @@ else:
                         cloud_record = {
                             "truck_id": input_truck_id, "barcode": input_barcode, "status": input_status,
                             "pickup_location": resolved_address if "Picked Up" in input_status else "Updated",
-                            "delivery_location": resolved_address if "Delivered" in input_status else "Pending Delivery"
-                        }
+                            "delivery_location": resolved_address if "Delivered" in input_status else "Pending Delivery"}
