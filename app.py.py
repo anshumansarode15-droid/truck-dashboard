@@ -31,8 +31,8 @@ st.markdown("---")
 st.sidebar.header(" Scanner Control Station")
 barcode_input = st.sidebar.text_input("Scan Barcode Here", key="barcode_scan", placeholder="Align scanner and trigger...")
 col1, col2 = st.sidebar.columns(2)
-pickup_clicked = col9.button(" Log Pickup", use_container_width=True)
-delivery_clicked = col9.button(" Log Delivery", use_container_width=True)
+pickup_clicked = col1.button(" Log Pickup", use_container_width=True)
+delivery_clicked = col2.button(" Log Delivery", use_container_width=True)
 
 # Database Processing Logic
 # Solapur, Maharashtra, India reference coordinates
