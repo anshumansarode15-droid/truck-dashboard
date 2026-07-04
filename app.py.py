@@ -78,3 +78,32 @@ with right_web_col:
     else:
         # Displays data in a clean web spreadsheet style
         st.dataframe(df, use_container_width=True, height=450)
+    # ----------------- 📦 BARCODE SCANNER PORTAL -----------------
+    st.header("📦 New Scan Entry Portal")
+    
+    with st.form("barcode_scan_form", clear_on_submit=True):
+        st.write("Scan or enter a new barcode to log it to the database.")
+        
+        # Form input fields
+        input_truck_id = st.text_input("Truck ID / Vehicle Name", placeholder="e.g., TRK-05")
+        input_barcode = st.text_input("Barcode Data", placeholder="Click here and scan barcode")
+        input_status = st.selectbox("Scan Status", ["Success", "Damaged", "Wrong Destination"])
+        
+        submit_button = st.form_submit_button("💾 SAVE SCAN TO CLOUD DATABASE")
+        
+        if submit_button:
+            if input_truck_id and input_barcode:
+                try:
+                    # Insert data directly into your live Supabase database table
+                    new_record = {
+                        "truck_id": input_truck_id,
+                        "barcode": input_barcode,
+                        "status": input_status
+                    }
+                    supabase.table("scan_history").insert(new_record).execute()
+                    st.success(f"Successfully logged barcode {input_barcode} to the database!")
+                    st.rerun() # Refresh the dashboard to instantly show the new data row
+                except Exception as e:
+                    st.error(f"Failed to save data: {e}")
+            else:
+                st.warning("Please fill out both the Truck ID and Barcode fields.")
