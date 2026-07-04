@@ -21,10 +21,7 @@ supabase = init_supabase_client()
 
 # Initialize Local Backup Engine
 if "backup_db" not in st.session_state:
-    st.session_state.backup_db = [
-        {"created_at": "2026-07-04 10:00:00", "truck_id": "TRK-01", "barcode": "890107200123", "status": "Success"},
-        {"created_at": "2026-07-04 11:30:00", "truck_id": "TRK-02", "barcode": "750103123456", "status": "Damaged"}
-    ]
+    st.session_state.backup_db = 
 
 if "logged_in" not in st.session_state:
     st.session_state.logged_in = False
