@@ -55,23 +55,25 @@ def login_page():
     st.title("🚚 FLEET COMMAND")
     st.markdown("<p style='text-align: center; color: #cbd5e1; margin-bottom: 30px;'>Enterprise Scan & Asset Management Portal</p>", unsafe_allow_html=True)
     
-    username = st.text_input("Username", placeholder="Enter your operator username")
-    password = st.text_input("Password", type="password", placeholder="••••••••")
-    
-    st.markdown("<br>", unsafe_allow_html=True)
-    if st.button("AUTHENTICATE SYSTEM"):
-        if username == "admin" and password == "Anshuman@0310":
-            st.session_state.logged_in = True
-            st.success("Access Granted.")
-            st.rerun()
-        else:
-            st.error("Access Denied: Invalid System Credentials")
+    # Using specific form targets stops automatic reloads from wiping text inputs
+    with st.form("secure_auth_form"):
+        username = st.text_input("Username", placeholder="Enter your operator username")
+        password = st.text_input("Password", type="password", placeholder="••••••••")
+        submit_auth = st.form_submit_button("AUTHENTICATE SYSTEM")
+        
+        if submit_auth:
+            if username == "admin" and password == "securepass2026":
+                st.session_state.logged_in = True
+                st.success("Access Granted.")
+                st.rerun()
+            else:
+                st.error("Access Denied: Invalid System Credentials")
 
 # ----------------- 🚦 MAIN ROUTE CONTROL -----------------
 if not st.session_state.logged_in:
     login_page()
 else:
-    # Explicit 4:1 width ratio inside columns fixes latest Streamlit engine requirements
+    # Explicit width arguments fix formatting layouts on modern Streamlit versions
     top_col1, top_col2 = st.columns([4, 1])
     
     with top_col1:
@@ -86,6 +88,7 @@ else:
     # ----------------- 🚚 1. MAP DRAWER ROUTING LAYER -----------------
     st.header("📍 Live Fleet Tracker Map")
     
+    # The map fragment is isolated safely here and can no longer interfere with the login screen
     @st.fragment(run_every="10s")
     def show_live_map():
         base_map = folium.Map(location=[20.5937, 78.9629], zoom_start=5, tiles="OpenStreetMap")
@@ -200,10 +203,3 @@ else:
         df = pd.DataFrame(columns=['created_at', 'truck_id', 'barcode', 'status', 'pickup_location', 'delivery_location'])
 
     clean_df = df[['created_at', 'truck_id', 'barcode', 'status', 'pickup_location', 'delivery_location']]
-    st.dataframe(clean_df, use_container_width=True)
-    
-    excel_buffer = io.BytesIO()
-    with pd.ExcelWriter(excel_buffer, engine='openpyxl') as writer:
-        clean_df.to_excel(writer, index=False, sheet_name='Route_Logistics')
-    
-    st.download_button()
