@@ -59,7 +59,7 @@ def login_page():
         submit_auth = st.form_submit_button("AUTHENTICATE SYSTEM")
         
         if submit_auth:
-            if username == "admin" and password == "securepass2026":
+            if username == "admin" and password == "Anshuman@0310":
                 st.session_state.logged_in = True
                 st.success("Access Granted.")
                 st.rerun()
