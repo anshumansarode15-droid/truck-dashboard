@@ -69,7 +69,7 @@ def login_page():
 if not st.session_state.logged_in:
     login_page()
 else:
-    top_col1, top_col2 = st.columns([4, 1])
+    top_col1, top_col2 = st.columns()
     
     with top_col1:
         st.title("📊 Live Operations Dashboard")
@@ -169,7 +169,7 @@ else:
                 try:
                     match_res = supabase.table("fleet_scans").select("*")\
                         .eq("truck_id", input_truck_id).eq("barcode", input_barcode).execute()
-                    existing_record = match_res.data[0] if match_res.data else None
+                    existing_record = match_res.data if match_res.data else None
 
                     if "Picked Up" in input_status:
                         record_payload = {
@@ -185,8 +185,10 @@ else:
                         }
                     else:
                         if existing_record:
+                            # existing_record comes back as a list, grab the first element dictionary if present
+                            rec_id = existing_record[0]["id"] if isinstance(existing_record, list) else existing_record["id"]
                             record_payload = {
-                                "id": existing_record["id"],
+                                "id": rec_id,
                                 "truck_id": input_truck_id,
                                 "barcode": input_barcode,
                                 "status": "Delivered",
@@ -211,6 +213,3 @@ else:
                     st.success("Database entry synced successfully!")
                     st.rerun()
 
-                except Exception as db_err:
-                    st.error(f"Failed to synchronize records to cloud cluster database: {db_err}")
-            else:
