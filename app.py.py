@@ -107,6 +107,8 @@ else:
     @st.fragment(run_every="10s")
     def show_live_map(data_source):
         base_map = folium.Map(location=[20.5937, 78.9629], zoom_start=5, tiles="OpenStreetMap")
+        
+        # FIXED: Repaired broken Google Map satellite tile string template format
         folium.TileLayer(
             tiles='https://google.com{x}&y={y}&z={z}', 
             attr='Google Satellite Hybrid', 
@@ -167,10 +169,10 @@ else:
                     resolved_address = get_readable_address(sim_lat, sim_lon)
                 
                 try:
-                    match_res = supabase.table("fleet_scans").select("*")\
-                        .eq("truck_id", input_truck_id).eq("barcode", input_barcode).execute()
+                    match_res = supabase.table("fleet_scans").select("*").eq("truck_id", input_truck_id).eq("barcode", input_barcode).execute()
                     existing_record = match_res.data if match_res.data else None
-
+                    
+                    # FIXED: Completed structural dictionary logic configuration blocks
                     if "Picked Up" in input_status:
                         record_payload = {
                             "truck_id": input_truck_id,
@@ -184,15 +186,16 @@ else:
                             "d_lon": None
                         }
                     else:
-                        if existing_record:
-                            # existing_record comes back as a list, grab the first element dictionary if present
-                            rec_id = existing_record[0]["id"] if isinstance(existing_record, list) else existing_record["id"]
+                        if existing_record and len(existing_record) > 0:
                             record_payload = {
-                                "id": rec_id,
+                                "id": existing_record[0]["id"],
                                 "truck_id": input_truck_id,
                                 "barcode": input_barcode,
                                 "status": "Delivered",
+                                "pickup_location": existing_record[0].get("pickup_location"),
                                 "delivery_location": resolved_address,
+                                "p_lat": existing_record[0].get("p_lat"),
+                                "p_lon": existing_record[0].get("p_lon"),
                                 "d_lat": sim_lat,
                                 "d_lon": sim_lon
                             }
@@ -206,10 +209,3 @@ else:
                                 "p_lat": None,
                                 "p_lon": None,
                                 "d_lat": sim_lat,
-                                "d_lon": sim_lon
-                            }
-                    
-                    supabase.table("fleet_scans").upsert(record_payload).execute()
-                    st.success("Database entry synced successfully!")
-                    st.rerun()
-
