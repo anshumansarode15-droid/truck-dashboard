@@ -7,7 +7,6 @@ from streamlit_folium import st_folium
 from geopy.geocoders import Nominatim
 
 # ----------------- 🛠️ SYSTEM SECURITY & CONFIGURATION -----------------
-# Dynamically fetch encrypted keys from secrets layer mapping safely
 SUPABASE_URL = st.secrets.get("SUPABASE_URL", "https://supabase.co")
 SUPABASE_KEY = st.secrets.get("SUPABASE_KEY", "your-secret-anon-key")
 
@@ -59,7 +58,7 @@ def login_page():
         submit_auth = st.form_submit_button("AUTHENTICATE SYSTEM")
         
         if submit_auth:
-            if username == "admin" and password == "Anshuman@0310":
+            if username == "admin" and password == "securepass2026":
                 st.session_state.logged_in = True
                 st.success("Access Granted.")
                 st.rerun()
@@ -70,7 +69,7 @@ def login_page():
 if not st.session_state.logged_in:
     login_page()
 else:
-    top_col1, top_col2 = st.columns()
+    top_col1, top_col2 = st.columns([4, 1])
     
     with top_col1:
         st.title("📊 Live Operations Dashboard")
@@ -81,7 +80,6 @@ else:
             st.session_state.logged_in = False
             st.rerun()
 
-    # Pull system activity logs directly from Supabase Cloud Cluster
     scans_data = []
     if supabase:
         try:
@@ -169,7 +167,6 @@ else:
                     resolved_address = get_readable_address(sim_lat, sim_lon)
                 
                 try:
-                    # Query existing item entries to determine historical state routes 
                     match_res = supabase.table("fleet_scans").select("*")\
                         .eq("truck_id", input_truck_id).eq("barcode", input_barcode).execute()
                     existing_record = match_res.data[0] if match_res.data else None
@@ -189,7 +186,7 @@ else:
                     else:
                         if existing_record:
                             record_payload = {
-                                "id": existing_record["id"],  # Passes primary key identifier row mapping to update instead of insert
+                                "id": existing_record["id"],
                                 "truck_id": input_truck_id,
                                 "barcode": input_barcode,
                                 "status": "Delivered",
@@ -210,4 +207,10 @@ else:
                                 "d_lon": sim_lon
                             }
                     
-                    # Atomic operational write synchronization
+                    supabase.table("fleet_scans").upsert(record_payload).execute()
+                    st.success("Database entry synced successfully!")
+                    st.rerun()
+
+                except Exception as db_err:
+                    st.error(f"Failed to synchronize records to cloud cluster database: {db_err}")
+            else:
