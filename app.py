@@ -27,7 +27,7 @@ if "logged_in" not in st.session_state:
 @st.cache_data(ttl=3600)
 def get_readable_address(lat, lon):
     try:
-        geolocator = Nominatim(user_agent="fleet_command_dashboard_v7")
+        geolocator = Nominatim(user_agent="fleet_command_dashboard_v8")
         location = geolocator.reverse((lat, lon), timeout=5)
         if location and location.address:
             parts = location.address.split(",")
@@ -108,7 +108,6 @@ else:
     def show_live_map(data_source):
         base_map = folium.Map(location=[20.5937, 78.9629], zoom_start=5, tiles="OpenStreetMap")
         
-        # FIXED: Corrected Google Satellite map server template link routing
         folium.TileLayer(
             tiles='https://google.com{x}&y={y}&z={z}', 
             attr='Google Satellite Hybrid', 
@@ -171,11 +170,11 @@ else:
                 try:
                     match_res = supabase.table("fleet_scans").select("*").eq("truck_id", input_truck_id).eq("barcode", input_barcode).execute()
                     
+                    # FIXED: Slices the first dictionary row safely out of the query array matching standard types
                     existing_record = None
                     if match_res.data and len(match_res.data) > 0:
                         existing_record = match_res.data[0]
                     
-                    # FIXED: Completed structural dictionary mappings and indentation alignment closures
                     if "Picked Up" in input_status:
                         record_payload = {
                             "truck_id": input_truck_id,
@@ -210,4 +209,6 @@ else:
                                 "pickup_location": "Unknown Origin",
                                 "delivery_location": resolved_address,
                                 "p_lat": None,
-                                "p_lon": None, }
+                                "p_lon": None,
+                                "d_lat": sim_lat,
+                                "d_lon": sim_lon
