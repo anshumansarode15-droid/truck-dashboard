@@ -69,7 +69,7 @@ def login_page():
 if not st.session_state.logged_in:
     login_page()
 else:
-    top_col1, top_col2 = st.columns([4, 1])
+    top_col1, top_col2 = st.columns(2)
     
     with top_col1:
         st.title("📊 Live Operations Dashboard")
@@ -80,10 +80,10 @@ else:
             st.session_state.logged_in = False
             st.rerun()
 
-      scans_data = []
+    scans_data = []
     if supabase:
         try:
-            # FIXED: Changed 'descending=True' to 'desc=True' to match the postgrest API layout specification
+            # FIXED: Corrected parameter syntax mapping rule from descending to desc
             response = supabase.table("fleet_scans").select("*").order("created_at", desc=True).execute()
             scans_data = response.data if response.data else []
         except Exception as e:
@@ -213,5 +213,3 @@ else:
                                 "p_lat": None,
                                 "p_lon": None,
                                 "d_lat": sim_lat,
-                                "d_lon": sim_lon
-                            }
