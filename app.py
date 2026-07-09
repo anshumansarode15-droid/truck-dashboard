@@ -15,7 +15,6 @@ from string import Template
 SUPABASE_URL = st.secrets.get("SUPABASE_URL", "https://supabase.co")
 SUPABASE_KEY = st.secrets.get("SUPABASE_KEY", "your-secret-anon-key")
 
-# Secure Email SMTP Credentials managed safely from your Streamlit cloud panel
 SMTP_SERVER = st.secrets.get("SMTP_SERVER", "://gmail.com")
 SMTP_PORT = int(st.secrets.get("SMTP_PORT", 587))
 SENDER_EMAIL = st.secrets.get("SENDER_EMAIL", "your-logistics-system@gmail.com")
@@ -48,7 +47,6 @@ def get_readable_address(lat, lon):
         pass
     return f"Location Pin ({lat:.4f}, {lon:.4f})"
 
-# ----------------- 📧 AUTOMATED SEPARATED EMAIL ENGINE -----------------
 def send_location_email(truck_id, barcode, status, lat, lon, address, driver_mobile, history_list=None):
     if not SENDER_EMAIL or not SENDER_PASSWORD:
         return False
@@ -56,7 +54,6 @@ def send_location_email(truck_id, barcode, status, lat, lon, address, driver_mob
     try:
         template_path = os.path.join(os.path.dirname(__file__), "email_template.html")
         if not os.path.exists(template_path):
-            st.error("Email layout file error: 'email_template.html' file is missing in your repository.")
             return False
             
         with open(template_path, "r", encoding="utf-8") as file:
@@ -70,7 +67,7 @@ def send_location_email(truck_id, barcode, status, lat, lon, address, driver_mob
         google_maps_link = f"https://google.com{lat},{lon}"
         
         history_html_rows = ""
-        if history_list:
+        if history_list and len(history_list) > 0:
             for entry in history_list[:5]:
                 history_html_rows += f"""
                 <tr style="border-bottom: 1px solid #e2e8f0; font-size: 13px;">
@@ -86,7 +83,6 @@ def send_location_email(truck_id, barcode, status, lat, lon, address, driver_mob
         else:
             history_html_rows = '<tr><td colspan="7" style="padding: 10px 0; text-align: center; color: #94a3b8; font-size: 13px;">No prior history found.</td></tr>'
 
-        # FIXED: Using Python Template layout map system completely bypasses HTML bracket errors
         email_template = Template(template_content)
         html_body = email_template.substitute(
             truck_id=str(truck_id),
@@ -108,8 +104,7 @@ def send_location_email(truck_id, barcode, status, lat, lon, address, driver_mob
         server.sendmail(SENDER_EMAIL, [SUPERVISOR_EMAIL], msg.as_string())
         server.quit()
         return True
-    except Exception as email_err:
-        st.error(f"Email routing error: {email_err}")
+    except Exception:
         return False
 
 # ----------------- 🎨 PREMIUM SECURITY INTERFACE -----------------
@@ -165,17 +160,16 @@ else:
             st.error(f"Error fetching live fleet data: {e}")
 
     # ----------------- 📈 LIVE ANALYTICAL METRIC TILES -----------------
-    if scans_data:
-        df_metrics = pd.DataFrame(scans_data)
-        total_trips = len(df_metrics)
-        in_transit = len(df_metrics[df_metrics['status'] == 'In Transit'])
-        delivered = len(df_metrics[df_metrics['status'] == 'Delivered'])
-        
-        m_col1, m_col2, m_col3 = st.columns(3)
-        m_col1.metric(label="📦 Active Tracked Assets", value=total_trips)
-        m_col2.metric(label="🚚 Operational Trucks In Transit", value=in_transit)
-        m_col3.metric(label="✅ Successful Cargo Deliveries", value=delivered)
-        st.markdown("---")
+    # FIXED: Added explicit fallback variables to prevent UI block hiding when database has 0 items
+    total_trips = len(scans_data)
+    in_transit = sum(1 for x in scans_data if x.get('status') == 'In Transit')
+    delivered = sum(1 for x in scans_data if x.get('status') == 'Delivered')
+    
+    m_col1, m_col2, m_col3 = st.columns(3)
+    m_col1.metric(label="📦 Active Tracked Assets", value=total_trips)
+    m_col2.metric(label="🚚 Operational Trucks In Transit", value=in_transit)
+    m_col3.metric(label="✅ Successful Cargo Deliveries", value=delivered)
+    st.markdown("---")
 
     # ----------------- 🚚 1. MAP DRAWER ROUTING LAYER -----------------
     st.header("📍 Live Fleet Tracker Map")
@@ -212,6 +206,12 @@ else:
                             tooltip=f"✅ {truck_plate}",
                             icon=folium.Icon(color="green", icon="stop", prefix="fa")
                         ).add_to(base_map)
+                        
+                        folium.PolyLine(
+                            locations=[[row['p_lat'], row['p_lon']], [row['d_lat'], row['d_lon']]],
+                            color="#ff4b5c",
+                            weight=4,
+                            opacity=0.8
+                        ).add_to(base_map)
 
-
-
+        folium.LayerControl().add_to(base_map)
