@@ -9,6 +9,7 @@ from geopy.geocoders import Nominatim
 import smtplib
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
+from string import Template
 
 # ----------------- 🛠️ SYSTEM SECURITY & CONFIGURATION -----------------
 SUPABASE_URL = st.secrets.get("SUPABASE_URL", "https://supabase.co")
@@ -53,14 +54,13 @@ def send_location_email(truck_id, barcode, status, lat, lon, address, driver_mob
         return False
         
     try:
-        # 1. Read the separate HTML layout file from your project folder safely
         template_path = os.path.join(os.path.dirname(__file__), "email_template.html")
         if not os.path.exists(template_path):
             st.error("Email layout file error: 'email_template.html' file is missing in your repository.")
             return False
             
         with open(template_path, "r", encoding="utf-8") as file:
-            html_template = file.read()
+            template_content = file.read()
             
         msg = MIMEMultipart('alternative')
         msg['Subject'] = f"🚨 FLEET ALERT: Truck [{truck_id}] - Scan Status Update"
@@ -69,7 +69,6 @@ def send_location_email(truck_id, barcode, status, lat, lon, address, driver_mob
         
         google_maps_link = f"https://google.com{lat},{lon}"
         
-        # 2. Build explicit table row strings dynamically from the tracking loops data
         history_html_rows = ""
         if history_list:
             for entry in history_list[:5]:
@@ -87,16 +86,17 @@ def send_location_email(truck_id, barcode, status, lat, lon, address, driver_mob
         else:
             history_html_rows = '<tr><td colspan="7" style="padding: 10px 0; text-align: center; color: #94a3b8; font-size: 13px;">No prior history found.</td></tr>'
 
-        # 3. Inject variables directly into the separated HTML text variables package placeholder map safely
-        html_body = html_template.format(
-            truck_id=truck_id,
-            driver_mobile=driver_mobile,
-            barcode=barcode,
-            status=status,
-            lat=lat,
-            lon=lon,
-            address=address,
-            google_maps_link=google_maps_link,
+        # FIXED: Using Python Template layout map system completely bypasses HTML bracket errors
+        email_template = Template(template_content)
+        html_body = email_template.substitute(
+            truck_id=str(truck_id),
+            driver_mobile=str(driver_mobile),
+            barcode=str(barcode),
+            status=str(status),
+            lat=f"{lat:.4f}",
+            lon=f"{lon:.4f}",
+            address=str(address),
+            google_maps_link=str(google_maps_link),
             history_html_rows=history_html_rows
         )
         
@@ -211,3 +211,7 @@ else:
                             popup=f"<b>Truck: {truck_plate}</b><br>Driver Mob: {mob}<br>Destination: {row.get('delivery_location', '')}",
                             tooltip=f"✅ {truck_plate}",
                             icon=folium.Icon(color="green", icon="stop", prefix="fa")
+                        ).add_to(base_map)
+
+
+
