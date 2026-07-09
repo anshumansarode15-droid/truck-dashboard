@@ -211,3 +211,4 @@ else:
                                 "delivery_location": resolved_address,
                                 "p_lat": None,
                                 "p_lon": None,
+                                 }
