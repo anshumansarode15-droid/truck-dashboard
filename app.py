@@ -210,5 +210,4 @@ else:
                                 "pickup_location": "Unknown Origin",
                                 "delivery_location": resolved_address,
                                 "p_lat": None,
-                                "p_lon": None,
-                                 }
+                                "p_lon": None, }
