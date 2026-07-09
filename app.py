@@ -213,5 +213,4 @@ else:
                                 weight=4,
                                 opacity=0.8
                             ).add_to(base_map)
-
-finally
+                            finally
