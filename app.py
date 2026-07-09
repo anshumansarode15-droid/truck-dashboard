@@ -214,3 +214,4 @@ else:
                                 opacity=0.8
                             ).add_to(base_map)
 
+finally
