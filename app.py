@@ -83,7 +83,6 @@ else:
     scans_data = []
     if supabase:
         try:
-            # FIXED: Corrected parameter syntax mapping rule from descending to desc
             response = supabase.table("fleet_scans").select("*").order("created_at", desc=True).execute()
             scans_data = response.data if response.data else []
         except Exception as e:
@@ -171,6 +170,7 @@ else:
                 try:
                     match_res = supabase.table("fleet_scans").select("*").eq("truck_id", input_truck_id).eq("barcode", input_barcode).execute()
                     
+                    # FIXED: Added [0] index accessor extraction string rule mapping safely
                     existing_record = None
                     if match_res.data and len(match_res.data) > 0:
                         existing_record = match_res.data[0]
