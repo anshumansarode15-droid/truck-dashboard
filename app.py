@@ -141,7 +141,7 @@ def send_location_email(truck_id, barcode, status, lat, lon, address, driver_mob
 
 # ----------------- 🎨 PREMIUM SECURITY INTERFACE -----------------
 def login_page():
-    st.markdown("""
+    st.markdown(""")
         <style>
         .stApp { background: linear-gradient(135deg, #1f4068 0%, #162447 100%); }
         h1 { color: #ffffff !important; text-align: center; font-family: 'Segoe UI', sans-serif; font-weight: 700; margin-bottom: 0px; }
