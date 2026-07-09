@@ -170,7 +170,7 @@ else:
                 try:
                     match_res = supabase.table("fleet_scans").select("*").eq("truck_id", input_truck_id).eq("barcode", input_barcode).execute()
                     
-                    # FIXED: Safely unpack the first dictionary item from the query result list
+                    # Unpacks the first dictionary row safely
                     existing_record = None
                     if match_res.data and len(match_res.data) > 0:
                         existing_record = match_res.data[0]
@@ -203,6 +203,7 @@ else:
                             }
                         else:
                             record_payload = {
+                                "id": None,
                                 "truck_id": input_truck_id,
                                 "barcode": input_barcode,
                                 "status": "Delivered (No Match)",
@@ -212,4 +213,3 @@ else:
                                 "p_lon": None,
                                 "d_lat": sim_lat,
                                 "d_lon": sim_lon
-                            }
