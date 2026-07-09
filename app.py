@@ -203,8 +203,7 @@ else:
                                 "d_lat": sim_lat,
                                 "d_lon": sim_lon
                             }
-                        else:
-                            record_payload = {
+                        else: record_payload = {
                                 "truck_id": input_truck_id,
                                 "barcode": input_barcode,
                                 "status": "Delivered (No Match)",
