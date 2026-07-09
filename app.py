@@ -80,10 +80,11 @@ else:
             st.session_state.logged_in = False
             st.rerun()
 
-    scans_data = []
+      scans_data = []
     if supabase:
         try:
-            response = supabase.table("fleet_scans").select("*").order("created_at", descending=True).execute()
+            # FIXED: Changed 'descending=True' to 'desc=True' to match the postgrest API layout specification
+            response = supabase.table("fleet_scans").select("*").order("created_at", desc=True).execute()
             scans_data = response.data if response.data else []
         except Exception as e:
             st.error(f"Error fetching live fleet data: {e}")
