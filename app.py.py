@@ -108,7 +108,6 @@ else:
     def show_live_map(data_source):
         base_map = folium.Map(location=[20.5937, 78.9629], zoom_start=5, tiles="OpenStreetMap")
         
-        # FIXED: Upgraded broken Google Tile layout pathing template strings
         folium.TileLayer(
             tiles='https://google.com{x}&y={y}&z={z}', 
             attr='Google Satellite Hybrid', 
@@ -171,10 +170,11 @@ else:
                 try:
                     match_res = supabase.table("fleet_scans").select("*").eq("truck_id", input_truck_id).eq("barcode", input_barcode).execute()
                     
-                    # FIXED: Safe unpacking array fallback check protects layout structure
-                    existing_record = match_res.data[0] if (match_res.data and len(match_res.data) > 0) else None
+                    # FIXED: Safely unpack the first dictionary item from the query result list
+                    existing_record = None
+                    if match_res.data and len(match_res.data) > 0:
+                        existing_record = match_res.data[0]
                     
-                    # FIXED: Both transaction payload blocks are completely filled and aligned
                     if "Picked Up" in input_status:
                         record_payload = {
                             "truck_id": input_truck_id,
@@ -210,3 +210,6 @@ else:
                                 "delivery_location": resolved_address,
                                 "p_lat": None,
                                 "p_lon": None,
+                                "d_lat": sim_lat,
+                                "d_lon": sim_lon
+                            }
