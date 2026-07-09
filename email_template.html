@@ -7,20 +7,20 @@
             </div>
             <div style="padding: 24px;">
                 <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
-                    <tr style="border-bottom: 1px solid #f1f5f9;"><td style="padding: 10px 0; font-weight: bold; color: #64748b;">Truck Number Plate:</td><td style="padding: 10px 0; text-align: right; font-weight: bold; color: #1e293b; font-size: 16px;">🚨 {truck_id}</td></tr>
-                    <tr style="border-bottom: 1px solid #f1f5f9;"><td style="padding: 10px 0; font-weight: bold; color: #64748b;">Driver Mobile No:</td><td style="padding: 10px 0; text-align: right; font-weight: bold; color: #2563eb;">📱 {driver_mobile}</td></tr>
-                    <tr style="border-bottom: 1px solid #f1f5f9;"><td style="padding: 10px 0; font-weight: bold; color: #64748b;">Barcode SKU:</td><td style="padding: 10px 0; text-align: right; font-family: monospace; font-size: 14px; background: #f1f5f9; padding: 4px 8px; border-radius: 4px;">{barcode}</td></tr>
-                    <tr style="border-bottom: 1px solid #f1f5f9;"><td style="padding: 10px 0; font-weight: bold; color: #64748b;">Update Event:</td><td style="padding: 10px 0; text-align: right; color: #e43f5a; font-weight: bold;">{status}</td></tr>
-                    <tr style="border-bottom: 1px solid #f1f5f9;"><td style="padding: 10px 0; font-weight: bold; color: #64748b;">Live Lat / Lon:</td><td style="padding: 10px 0; text-align: right; font-family: monospace;">{lat:.4f}, {lon:.4f}</td></tr>
-                    <tr><td style="padding: 10px 0; font-weight: bold; color: #64748b;">Resolved Address:</td><td style="padding: 10px 0; text-align: right; font-size: 14px;">{address}</td></tr>
+                    <tr style="border-bottom: 1px solid #f1f5f9;"><td style="padding: 10px 0; font-weight: bold; color: #64748b;">Truck Number Plate:</td><td style="padding: 10px 0; text-align: right; font-weight: bold; color: #1e293b; font-size: 16px;">🚨 $truck_id</td></tr>
+                    <tr style="border-bottom: 1px solid #f1f5f9;"><td style="padding: 10px 0; font-weight: bold; color: #64748b;">Driver Mobile No:</td><td style="padding: 10px 0; text-align: right; font-weight: bold; color: #2563eb;">📱 $driver_mobile</td></tr>
+                    <tr style="border-bottom: 1px solid #f1f5f9;"><td style="padding: 10px 0; font-weight: bold; color: #64748b;">Barcode SKU:</td><td style="padding: 10px 0; text-align: right; font-family: monospace; font-size: 14px; background: #f1f5f9; padding: 4px 8px; border-radius: 4px;">$barcode</td></tr>
+                    <tr style="border-bottom: 1px solid #f1f5f9;"><td style="padding: 10px 0; font-weight: bold; color: #64748b;">Update Event:</td><td style="padding: 10px 0; text-align: right; color: #e43f5a; font-weight: bold;">$status</td></tr>
+                    <tr style="border-bottom: 1px solid #f1f5f9;"><td style="padding: 10px 0; font-weight: bold; color: #64748b;">Live Lat / Lon:</td><td style="padding: 10px 0; text-align: right; font-family: monospace;">$lat, $lon</td></tr>
+                    <tr><td style="padding: 10px 0; font-weight: bold; color: #64748b;">Resolved Address:</td><td style="padding: 10px 0; text-align: right; font-size: 14px;">$address</td></tr>
                 </table>
                 
                 <div style="text-align: center; margin: 25px 0;">
-                    <a href="{google_maps_link}" style="background-color: #e43f5a; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold; display: inline-block; box-shadow: 0 4px 12px rgba(228,63,90,0.3);">🗺️ TRACK LIVE LOCATION ON MAP</a>
+                    <a href="$google_maps_link" style="background-color: #e43f5a; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold; display: inline-block; box-shadow: 0 4px 12px rgba(228,63,90,0.3);">🗺️ TRACK LIVE LOCATION ON MAP</a>
                 </div>
                 
                 <div style="border-radius: 8px; overflow: hidden; border: 1px solid #cbd5e1; margin-top: 15px; margin-bottom: 25px;">
-                    <img src="https://google.com{lat},{lon}&zoom=13&size=600x300&maptype=roadmap&markers=color:blue%7Clabel:T%7C{lat},{lon}&sensor=false" alt="Live Location Map Image" style="width: 100%; height: auto; display: block;" />
+                    <img src="https://google.com" alt="Live Location Map Image" style="width: 100%; height: auto; display: block;" />
                 </div>
 
                 <h3 style="font-size: 16px; color: #162447; margin: 0 0 10px 0; border-bottom: 2px solid #1f4068; padding-bottom: 5px;">📊 Recent Operational Logs History</h3>
@@ -37,7 +37,7 @@
                         </tr>
                     </thead>
                     <tbody>
-                        {history_html_rows}
+                        $history_html_rows
                     </tbody>
                 </table>
             </div>
