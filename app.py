@@ -27,7 +27,7 @@ if "logged_in" not in st.session_state:
 @st.cache_data(ttl=3600)
 def get_readable_address(lat, lon):
     try:
-        geolocator = Nominatim(user_agent="fleet_command_dashboard_v4")
+        geolocator = Nominatim(user_agent="fleet_command_dashboard_v5")
         location = geolocator.reverse((lat, lon), timeout=5)
         if location and location.address:
             parts = location.address.split(",")
@@ -170,7 +170,7 @@ else:
                 try:
                     match_res = supabase.table("fleet_scans").select("*").eq("truck_id", input_truck_id).eq("barcode", input_barcode).execute()
                     
-                    # Unpacks the first dictionary row safely
+                    # FIX: Safely unpack the first item as a dictionary using [0]
                     existing_record = None
                     if match_res.data and len(match_res.data) > 0:
                         existing_record = match_res.data[0]
@@ -203,7 +203,6 @@ else:
                             }
                         else:
                             record_payload = {
-                                "id": None,
                                 "truck_id": input_truck_id,
                                 "barcode": input_barcode,
                                 "status": "Delivered (No Match)",
@@ -213,3 +212,4 @@ else:
                                 "p_lon": None,
                                 "d_lat": sim_lat,
                                 "d_lon": sim_lon
+                            }
