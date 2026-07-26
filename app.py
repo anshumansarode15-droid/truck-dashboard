@@ -203,7 +203,7 @@ else:
                             icon=folium.Icon(color="green", icon="stop", prefix="fa")
                         ).add_to(base_map)
                                                  
-                   if pd.notna(p_lat) and pd.notna(p_lon) and pd.notna(d_lat) and pd.notna(d_lon):
+                   if pd.notna(p_lat) and if pd.notna(p_lon) and if pd.notna(d_lat) and if pd.notna(d_lon):
                     folium.PolyLine(
                         locations=[[p_lat, p_lon], [d_lat, d_lon]],
                         color="#ff4b5c",
