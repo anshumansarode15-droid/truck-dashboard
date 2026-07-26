@@ -212,4 +212,4 @@ else:
                                 color="#ff4b5c",
                                 weight=4,
                                 opacity=0.8
-                            ).add_to(base_map)
+                           folium.Marker(...).add_to(base_map)
