@@ -185,7 +185,7 @@ else:
                     p_lat, p_lon = row.get('p_lat'), row.get('p_lon')
                     d_lat, d_lon = row.get('d_lat'), row.get('d_lon')
                     
-                    # Add Pickup Marker
+                    
                     if pd.notna(p_lat) and pd.notna(p_lon) and p_lat is not None:
                         folium.Marker(
                             location=[p_lat, p_lon],
@@ -194,7 +194,7 @@ else:
                             icon=folium.Icon(color="blue", icon="play", prefix="fa")
                         ).add_to(base_map)
                         
-                    # Add Delivery Marker
+                    
                     if pd.notna(d_lat) and pd.notna(d_lon) and d_lat is not None:
                         folium.Marker(
                             location=[d_lat, d_lon],
@@ -203,11 +203,17 @@ else:
                             icon=folium.Icon(color="green", icon="stop", prefix="fa")
                         ).add_to(base_map)
                         
-                    # Add Polyline connecting route
+                   
                     if pd.notna(p_lat) and pd.notna(p_lon) and pd.notna(d_lat) and pd.notna(d_lon):
-folium.PolyLine(
-    locations=[[p_lat, p_lon], [d_lat, d_lon]],
-    color="#ff4b5c",
-    weight=4,
-    opacity=0.8
-).add_to(base_map) 
+                   
+                    if pd.notna(p_lat) and pd.notna(p_lon) and pd.notna(d_lat) and pd.notna(d_lon):
+                                                    # Add Polyline connecting route
+                    if pd.notna(p_lat) and pd.notna(p_lon) and pd.notna(d_lat) and pd.notna(d_lon):
+                                            
+                   if pd.notna(p_lat) and pd.notna(p_lon) and pd.notna(d_lat) and pd.notna(d_lon):
+                    folium.PolyLine(
+                        locations=[[p_lat, p_lon], [d_lat, d_lon]],
+                        color="#ff4b5c",
+                        weight=4,
+                        opacity=0.8
+                    ).add_to(base_map)
