@@ -204,7 +204,7 @@ else:
                         ).add_to(base_map)
                         
                     # Add Polyline connecting route
-                    if pd.notna(p_lat) and pd.notna(p_lon) and pd.notna(d_lat) and pd.notna(d_lon):
+                    if pd.notna(p_lat) and pd.notna(p_lon) and pd.notna(d_lat) and pd.notna(d_lon):if
 folium.PolyLine(
     locations=[[p_lat, p_lon], [d_lat, d_lon]],
     color="#ff4b5c",
